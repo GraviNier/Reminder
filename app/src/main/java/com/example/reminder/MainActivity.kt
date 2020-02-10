@@ -1,16 +1,20 @@
 package com.example.reminder
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
+import android.app.*
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.reminder.alerm.AlarmReceiver
+import com.example.reminder.alerm.NOTIFICATION_CONTENT
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
 
-private const val CHANNEL_ID = "channel_id"
+const val CHANNEL_ID = "channel_id"
 private const val CHANNEL_NAME = "channel_name"
 private const val CHANNEL_DESCRIPTION = "channel_description "
 
@@ -20,22 +24,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         createChannel()
-
-        var notificationId = 0   /// notificationID
-
         buttonNotification.setOnClickListener {
-            /// 通知の中身
-            val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_background)    /// 表示されるアイコン
-                .setContentTitle("Notification")                  /// 通知タイトル
-                .setContentText(editTextNotificationContent.text.toString())           /// 通知コンテンツ
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)   /// 通知の優先度
-
-            /// ボタンを押して通知を表示
-            with(NotificationManagerCompat.from(this)) {
-                notify(notificationId, builder.build())
-                notificationId += 1
-            }
+            scheduleNotification(editTextNotificationContent.text.toString())
         }
     }
 
@@ -51,5 +41,21 @@ class MainActivity : AppCompatActivity() {
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
+    }
+
+    private fun scheduleNotification(content :String){
+        var calendar  = Calendar.getInstance()
+        calendar.timeInMillis = System.currentTimeMillis()
+        calendar.add(Calendar.SECOND,5)
+
+        val notificationIntent = Intent(this,AlarmReceiver::class.java)
+        notificationIntent.putExtra(NOTIFICATION_CONTENT,content)
+
+        val pendingIntent = PendingIntent.getBroadcast(this,0,notificationIntent,0)
+
+        val alarmManager : AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+
+        Toast.makeText(this,"SetAlarm", Toast.LENGTH_SHORT).show()
     }
 }
