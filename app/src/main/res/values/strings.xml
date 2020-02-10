@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">Reminder</string>
     <string name="notification">notification</string>
-    <string name="notificationContent">Enter what you want to see in the notification</string>
+    <string name="notificationContent">Notification content</string>
 </resources>
