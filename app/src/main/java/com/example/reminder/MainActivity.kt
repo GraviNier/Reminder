@@ -1,16 +1,15 @@
 package com.example.reminder
 
+import TimePick
 import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.DatePicker
+import android.widget.TimePicker
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import com.example.reminder.alerm.AlarmReceiver
-import com.example.reminder.alerm.NOTIFICATION_CONTENT
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -18,7 +17,12 @@ const val CHANNEL_ID = "channel_id"
 private const val CHANNEL_NAME = "channel_name"
 private const val CHANNEL_DESCRIPTION = "channel_description "
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),DatePickerDialog.OnDateSetListener,TimePickerDialog.OnTimeSetListener   {
+    private var year = 0
+    private var monthOfYear = 0
+    private var dayOfMonth = 0
+    private var hourOfDay = 0
+    private var minute = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +31,30 @@ class MainActivity : AppCompatActivity() {
         buttonNotification.setOnClickListener {
             scheduleNotification(editTextNotificationContent.text.toString())
         }
+        textDate.setOnClickListener{
+            val newFragment = DatePick()
+            newFragment.show(supportFragmentManager, "datePicker")
+        }
+
+        textTime.setOnClickListener{
+            val newFragmentTime = TimePick()
+            newFragmentTime.show(supportFragmentManager, "timePicker")
+        }
+    }
+
+    override fun onDateSet(view: DatePicker, year: Int, monthOfYear: Int, dayOfMonth: Int) {
+        this.year = year
+        this.monthOfYear = monthOfYear
+        this.dayOfMonth = dayOfMonth
+        val str = String.format(Locale.JAPAN, "%d/%d/%d", year, monthOfYear+1, dayOfMonth)
+        textDate.text = str
+    }
+
+    override fun onTimeSet(view: TimePicker, hourOfDay: Int, minute: Int) {
+        this.hourOfDay = hourOfDay
+        this.minute = minute
+        val str = " " + String.format(Locale.JAPAN, "%d:%d", hourOfDay, minute)
+        textTime.text = str
     }
 
     private fun createChannel(){
@@ -44,11 +72,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun scheduleNotification(content :String){
-        var calendar  = Calendar.getInstance()
+        var calendar  = Calendar.getInstance(TimeZone.getDefault(), Locale.getDefault())
         calendar.timeInMillis = System.currentTimeMillis()
-        calendar.add(Calendar.SECOND,5)
+        calendar.set(year,monthOfYear,dayOfMonth,hourOfDay, minute,0)
 
-        val notificationIntent = Intent(this,AlarmReceiver::class.java)
+        val a = calendar.time
+
+
+        val notificationIntent = Intent(this, AlarmReceiver::class.java)
         notificationIntent.putExtra(NOTIFICATION_CONTENT,content)
 
         val pendingIntent = PendingIntent.getBroadcast(this,0,notificationIntent,0)
